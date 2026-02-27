@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Registro | PlaticaNubecita{% endblock %}
+
+{% block body %}
+<main class="simple-auth-shell">
+    <section class="card card--wide">
+        <h1>Completa tu registro</h1>
+        <p>Este enlace expira en 30 minutos y solo se puede usar una vez.</p>
+
+        <form id="complete-register-form" class="stack-form" action="{{ path('api_auth_register') }}" method="post">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('auth_register') }}">
+            <input type="hidden" name="token" value="{{ token }}">
+            <label>Nombre para mostrar
+                <input name="displayName" type="text" minlength="3" maxlength="80" required>
+            </label>
+            <label>Contraseña
+                <input name="password" type="password" minlength="8" maxlength="72" required autocomplete="new-password">
+            </label>
+            <button type="submit">Crear cuenta</button>
+        </form>
+
+        <p id="register-feedback" class="feedback"></p>
+        <a href="{{ path('app_home') }}">Volver al inicio</a>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/auth.js') }}" defer></script>
+{% endblock %}

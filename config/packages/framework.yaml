@@ -1,0 +1,23 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    session:
+        cookie_secure: auto
+        cookie_samesite: lax
+        cookie_httponly: true
+
+    rate_limiter:
+        auth_public:
+            policy: 'sliding_window'
+            limit: 30
+            interval: '15 minutes'
+        auth_login:
+            policy: 'sliding_window'
+            limit: 12
+            interval: '15 minutes'
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file

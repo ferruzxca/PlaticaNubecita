@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Acceso | PlaticaNubecita{% endblock %}
+
+{% block body %}
+<main class="auth-shell">
+    <section class="auth-hero">
+        <p class="badge">Chat cifrado</p>
+        <h1>PlaticaNubecita</h1>
+        <p>Conecta en tiempo real con estilo, seguridad y una implementación lista para Hostinger.</p>
+        <ul>
+            <li>Registro por enlace</li>
+            <li>Recuperación de contraseña</li>
+            <li>Mensajes y adjuntos cifrados en base de datos</li>
+        </ul>
+    </section>
+
+    <section class="auth-cards">
+        <article class="card">
+            <h2>Iniciar sesión</h2>
+            <form id="login-form" class="stack-form" action="{{ path('api_auth_login') }}" method="post">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('auth_login') }}">
+                <label>Correo
+                    <input name="email" type="email" required autocomplete="email">
+                </label>
+                <label>Contraseña
+                    <input name="password" type="password" required minlength="8" autocomplete="current-password">
+                </label>
+                <button type="submit">Entrar</button>
+            </form>
+            <p id="login-feedback" class="feedback"></p>
+        </article>
+
+        <article class="card">
+            <h2>¿No tienes cuenta?</h2>
+            <form id="request-register-form" class="stack-form" action="{{ path('api_auth_request_registration_link') }}" method="post">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('auth_public') }}">
+                <label>Correo
+                    <input name="email" type="email" required autocomplete="email">
+                </label>
+                <button type="submit">Enviar enlace de registro</button>
+            </form>
+            <p id="register-link-feedback" class="feedback"></p>
+        </article>
+
+        <article class="card">
+            <h2>Olvidé mi contraseña</h2>
+            <form id="forgot-password-form" class="stack-form" action="{{ path('api_auth_forgot_password') }}" method="post">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('auth_public') }}">
+                <label>Correo
+                    <input name="email" type="email" required autocomplete="email">
+                </label>
+                <button type="submit">Enviar recuperación</button>
+            </form>
+            <p id="forgot-feedback" class="feedback"></p>
+        </article>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/auth.js') }}" defer></script>
+{% endblock %}

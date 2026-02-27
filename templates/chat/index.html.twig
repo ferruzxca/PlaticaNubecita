@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Chat | PlaticaNubecita{% endblock %}
+
+{% block head %}
+<meta name="csrf-chat-create" content="{{ csrf_token('chat_create') }}">
+<meta name="csrf-chat-send" content="{{ csrf_token('chat_send') }}">
+<meta name="csrf-auth-logout" content="{{ csrf_token('auth_logout') }}">
+{% endblock %}
+
+{% block body %}
+<main class="chat-shell" data-current-user-id="{{ app.user.id }}" data-current-user-name="{{ app.user.displayName }}">
+    <aside class="chat-sidebar">
+        <div class="chat-sidebar__header">
+            <h1>PlaticaNubecita</h1>
+            <p>{{ app.user.displayName }}</p>
+            <button id="logout-button" class="ghost-btn">Cerrar sesión</button>
+        </div>
+
+        <section>
+            <h2>Cuentas registradas</h2>
+            <ul id="users-list" class="mini-list"></ul>
+        </section>
+
+        <section>
+            <h2>Mis chats</h2>
+            <ul id="chats-list" class="mini-list"></ul>
+        </section>
+    </aside>
+
+    <section class="chat-main">
+        <header class="chat-main__header">
+            <h2 id="chat-title">Selecciona una cuenta</h2>
+            <p id="chat-subtitle">Elige un chat para empezar a conversar.</p>
+        </header>
+
+        <div id="messages-panel" class="messages-panel"></div>
+
+        <form id="send-message-form" class="message-form" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('chat_send') }}">
+            <label>
+                Mensaje
+                <textarea name="text" rows="3" placeholder="Escribe tu mensaje..."></textarea>
+            </label>
+            <label>
+                Adjuntos (imágenes, audio, video mp4 y archivos)
+                <input type="file" name="files[]" multiple>
+            </label>
+            <button type="submit">Enviar</button>
+            <p id="message-feedback" class="feedback"></p>
+        </form>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/chat.js') }}" defer></script>
+{% endblock %}
