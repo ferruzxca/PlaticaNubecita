@@ -95,7 +95,7 @@ class ApiAuthController extends AbstractController
         $this->entityManager->persist($audit);
         $this->entityManager->flush();
 
-        $this->security->login($user, firewallName: 'main');
+        $this->security->login($user, 'form_login', 'main');
 
         return new JsonResponse([
             'status' => 'ok',
@@ -194,7 +194,7 @@ class ApiAuthController extends AbstractController
         $this->entityManager->persist($registrationToken);
         $this->entityManager->flush();
 
-        $this->security->login($user, firewallName: 'main');
+        $this->security->login($user, 'form_login', 'main');
 
         return new JsonResponse([
             'status' => 'ok',
