@@ -166,19 +166,46 @@ php bin/console lint:yaml config
 ```
 
 3. Configurar `.env.local` con variables de producción.
-4. Ejecutar migraciones:
+4. Crear la carpeta de avatars:
+
+```bash
+mkdir -p public/uploads/avatars
+chmod 755 public/uploads/avatars
+```
+
+5. Elegir una de estas dos formas para preparar la base de datos:
+
+Importar el `.sql` listo para Hostinger:
+
+```bash
+mysql -u USER -p DB_NAME < database/platica_nubecita_mysql.sql
+```
+
+O ejecutar migraciones:
 
 ```bash
 APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
-5. Limpiar caché:
+6. Limpiar caché:
 
 ```bash
 APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console cache:clear --no-warmup
 ```
 
-6. Confirmar cron activo para limpieza de tokens.
+7. Confirmar cron activo para limpieza de tokens.
+
+## Archivo SQL
+
+El esquema MySQL/MariaDB listo para importar esta en:
+
+`database/platica_nubecita_mysql.sql`
+
+Ese archivo crea:
+
+- tablas de usuarios, auth, chats, mensajes y adjuntos,
+- indices y foreign keys,
+- tabla `doctrine_migration_versions` marcada con las 2 migraciones actuales.
 
 ## Checklist de aceptación v2
 
