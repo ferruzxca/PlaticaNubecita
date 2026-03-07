@@ -24,6 +24,7 @@ security:
     access_control:
         - { path: ^/chat, roles: ROLE_USER }
         - { path: ^/api/(users|chats|attachments), roles: ROLE_USER }
+        - { path: ^/api/profile, roles: ROLE_USER }
         - { path: ^/api/auth/logout, roles: ROLE_USER }
 
 when@test:

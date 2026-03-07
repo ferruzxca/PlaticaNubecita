@@ -15,6 +15,10 @@ framework:
             policy: 'sliding_window'
             limit: 12
             interval: '15 minutes'
+        ai_chat:
+            policy: 'sliding_window'
+            limit: 30
+            interval: '5 minutes'
 
 when@test:
     framework:

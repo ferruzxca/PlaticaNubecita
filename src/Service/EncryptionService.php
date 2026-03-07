@@ -83,29 +83,40 @@ class EncryptionService
 
     public function decrypt(string $ciphertext, string $nonce): string
     {
+        $lastError = null;
+
+        // Intenta primero con el backend preferido, pero permite fallback cruzado
+        // para soportar datos legacy cifrados con otro backend.
         if ($this->useSodium) {
             $plaintext = sodium_crypto_secretbox_open($ciphertext, $nonce, $this->encryptionKey);
-            if (false === $plaintext) {
-                throw new \RuntimeException('No se pudo descifrar el contenido.');
+            if (false !== $plaintext) {
+                return $plaintext;
             }
-
-            return $plaintext;
+            $lastError = 'No se pudo descifrar con sodium.';
         }
 
-        if (strlen($ciphertext) <= self::OPENSSL_TAG_BYTES) {
-            throw new \RuntimeException('Ciphertext inválido para OpenSSL.');
+        if (strlen($ciphertext) > self::OPENSSL_TAG_BYTES && strlen($nonce) >= self::OPENSSL_IV_BYTES) {
+            $iv = substr($nonce, 0, self::OPENSSL_IV_BYTES);
+            $tag = substr($ciphertext, 0, self::OPENSSL_TAG_BYTES);
+            $raw = substr($ciphertext, self::OPENSSL_TAG_BYTES);
+
+            $plaintext = openssl_decrypt($raw, 'aes-256-gcm', $this->encryptionKey, OPENSSL_RAW_DATA, $iv, $tag);
+            if (false !== $plaintext) {
+                return $plaintext;
+            }
+            $lastError = 'No se pudo descifrar con OpenSSL.';
+        } else {
+            $lastError = 'Ciphertext inválido para OpenSSL.';
         }
 
-        $iv = substr($nonce, 0, self::OPENSSL_IV_BYTES);
-        $tag = substr($ciphertext, 0, self::OPENSSL_TAG_BYTES);
-        $raw = substr($ciphertext, self::OPENSSL_TAG_BYTES);
-
-        $plaintext = openssl_decrypt($raw, 'aes-256-gcm', $this->encryptionKey, OPENSSL_RAW_DATA, $iv, $tag);
-        if (false === $plaintext) {
-            throw new \RuntimeException('No se pudo descifrar el contenido.');
+        if (!$this->useSodium && function_exists('sodium_crypto_secretbox_open')) {
+            $plaintext = sodium_crypto_secretbox_open($ciphertext, $nonce, $this->encryptionKey);
+            if (false !== $plaintext) {
+                return $plaintext;
+            }
         }
 
-        return $plaintext;
+        throw new \RuntimeException($lastError ?? 'No se pudo descifrar el contenido.');
     }
 
     public function encryptCombined(string $plaintext): string

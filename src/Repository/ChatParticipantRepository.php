@@ -25,8 +25,9 @@ class ChatParticipantRepository extends ServiceEntityRepository
     public function findByUser(User $user): array
     {
         return $this->createQueryBuilder('cp')
-            ->addSelect('c')
+            ->addSelect('c', 'u')
             ->join('cp.chat', 'c')
+            ->join('cp.user', 'u')
             ->andWhere('cp.user = :user')
             ->setParameter('user', $user)
             ->orderBy('c.id', 'DESC')
@@ -46,5 +47,34 @@ class ChatParticipantRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
 
         return (int) $count > 0;
+    }
+
+    public function findOneByChatAndUser(int $chatId, int $userId): ?ChatParticipant
+    {
+        return $this->createQueryBuilder('cp')
+            ->addSelect('u', 'c')
+            ->join('cp.user', 'u')
+            ->join('cp.chat', 'c')
+            ->andWhere('cp.chat = :chatId')
+            ->andWhere('cp.user = :userId')
+            ->setParameter('chatId', $chatId)
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @return list<ChatParticipant>
+     */
+    public function findByChatOrdered(int $chatId): array
+    {
+        return $this->createQueryBuilder('cp')
+            ->addSelect('u')
+            ->join('cp.user', 'u')
+            ->andWhere('cp.chat = :chatId')
+            ->setParameter('chatId', $chatId)
+            ->orderBy('cp.joinedAt', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

@@ -1,121 +1,90 @@
 # PlaticaNubecita
 
-Aplicacion de chat 1 a 1 construida con Symfony 7.4, orientada a despliegue simple en Hostinger, con autenticacion completa y cifrado de datos sensibles.
+Aplicación de chat cifrado con Symfony 7.4 lista para Hostinger.
 
-## 1. Que incluye este proyecto
+## v2 Features
 
-- Registro por enlace (magic link) enviado por correo.
-- Login por sesion web.
-- Recuperacion de contrasena por correo.
-- Lista de cuentas registradas al iniciar sesion.
-- Chat 1 a 1 con cambio de conversacion.
-- Polling cada 2.5 segundos para mensajes nuevos.
-- Adjuntos (archivos, imagenes, audio y video `.mp4`).
-- Cifrado en base de datos para:
-  - correo de usuario (almacenado cifrado + indice ciego)
-  - mensajes
-  - adjuntos
-  - metadatos sensibles de adjuntos
+- Auth completo: registro por link, login, reset de contraseña.
+- Chat 1 a 1 cifrado con polling cada 2.5s.
+- Chatbot IA `Nubecita IA` (OpenAI) en chat dedicado 1:1.
+- Perfil editable:
+  - nombre visible,
+  - estado,
+  - foto de perfil (archivo o cámara).
+- Chats de grupo:
+  - crear grupo,
+  - renombrar,
+  - agregar/quitar miembros,
+  - salir de grupo.
+- Adjuntos cifrados en base de datos con vista mejorada:
+  - preview inline para imagen/audio/video,
+  - tarjeta de descarga para archivos generales.
 
-## 2. Stack tecnico
+## Seguridad y cifrado
 
-- PHP + Symfony 7.4 LTS
-- Doctrine ORM + Doctrine Migrations
-- Twig + HTML + CSS + JavaScript vanilla
+- Contraseñas con hasher de Symfony (Argon/Bcrypt según entorno).
+- Correo no se guarda en claro:
+  - `email_hash` para búsqueda,
+  - `email_ciphertext` cifrado.
+- Cifrado en reposo para:
+  - mensajes,
+  - adjuntos,
+  - estado de perfil,
+  - nombre de grupo.
+- Avatar: almacenamiento simple en disco para máxima compatibilidad (ver sección “Avatar (simple)”).
+- CSRF en mutaciones.
+- Rate limiting para auth y para respuestas IA.
+- Cookies de sesión seguras (`HttpOnly`, `SameSite=Lax`, `Secure` en HTTPS).
+
+## Stack
+
+- Symfony 7.4
+- PHP 8.2+ (recomendado 8.4+)
+- Doctrine ORM/Migrations
+- Twig + JS/CSS vanilla
 - MySQL/MariaDB (Hostinger)
-- Symfony Mailer (SMTP Hostinger)
+- SMTP Hostinger
 
-## 3. Requisitos de entorno
+## Variables de entorno
 
-## Local
+Base:
 
-- PHP 8.4 recomendado (8.2 minimo en `composer.json`, pero dependencias actuales piden 8.4)
-- Composer 2
-- Extensiones:
-  - `pdo_mysql`
-  - `openssl`
-  - `mbstring`
-  - `intl`
-  - `xml`
-
-## Produccion (Hostinger)
-
-- PHP 8.4 activo para el subdominio.
-- MySQL creado y accesible.
-- SMTP activo para envio de correos.
-
-Nota importante: el proyecto soporta cifrado con `sodium` si existe, y hace fallback automatico a `OpenSSL AES-256-GCM` si `sodium` no esta disponible.
-
-## 4. Estructura funcional
-
-- Auth API: `src/Controller/ApiAuthController.php`
-- Chat API: `src/Controller/ApiChatController.php`
-- Cifrado: `src/Service/EncryptionService.php`
-- Tokens: `src/Service/TokenService.php`
-- Limpieza de tokens: `src/Command/CleanupTokensCommand.php`
-- Vistas:
-  - `templates/auth/*`
-  - `templates/chat/index.html.twig`
-- Frontend:
-  - `public/css/app.css`
-  - `public/js/auth.js`
-  - `public/js/chat.js`
-
-## 5. Configuracion de variables de entorno
-
-Usa `.env.example` como base y crea `.env.local`.
-
-Variables clave:
-
-- `APP_ENV=prod`
+- `APP_ENV`
 - `APP_SECRET`
 - `APP_BASE_URL`
 - `DEFAULT_URI`
 - `DATABASE_URL`
 - `MAILER_DSN`
 - `MAILER_FROM`
-- `APP_ENCRYPTION_KEY` (base64, 32 bytes)
-- `APP_ENCRYPTION_KEY_VERSION=1`
-- `APP_TOKEN_HASH_KEY` (string aleatorio largo)
-- `APP_MAX_UPLOAD_BYTES=26214400` (25 MB)
+- `APP_ENCRYPTION_KEY`
+- `APP_ENCRYPTION_KEY_VERSION`
+- `APP_TOKEN_HASH_KEY`
+- `APP_MAX_UPLOAD_BYTES=26214400`
+- `APP_MAX_AVATAR_BYTES=5242880`
 
-## Ejemplo `DATABASE_URL` Hostinger
+IA:
+
+- `AI_PROVIDER=openai` (`mock` para pruebas/local)
+- `OPENAI_API_KEY=`
+- `AI_MODEL=gpt-4.1-mini`
+- `AI_TIMEOUT_SECONDS=20`
+- `AI_MAX_OUTPUT_TOKENS=500`
+
+Ejemplo `DATABASE_URL` Hostinger:
 
 ```dotenv
 DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/DB_NAME?serverVersion=10.11.2-MariaDB&charset=utf8mb4"
 ```
 
-## Ejemplo `MAILER_DSN` Hostinger
+Ejemplo `MAILER_DSN` Hostinger:
 
 ```dotenv
 MAILER_DSN="smtp://EMAIL%40dominio.com:PASSWORD@smtp.hostinger.com:465?encryption=ssl&auth_mode=login"
 ```
 
-## 6. Ejecucion local
+## Endpoints API
 
-```bash
-composer install
-php bin/console doctrine:migrations:migrate --no-interaction
-php -S 127.0.0.1:8000 -t public
-```
-
-Abrir:
-
-- `http://127.0.0.1:8000`
-
-## 7. Pruebas y validaciones
-
-```bash
-php bin/phpunit
-php bin/console lint:container
-php bin/console lint:twig templates
-php bin/console lint:yaml config
-php bin/console doctrine:schema:validate --skip-sync
-```
-
-## 8. API (resumen)
-
-## Auth
+Auth:
 
 - `POST /api/auth/request-registration-link`
 - `POST /api/auth/register`
@@ -124,148 +93,124 @@ php bin/console doctrine:schema:validate --skip-sync
 - `POST /api/auth/forgot-password`
 - `POST /api/auth/reset-password`
 
-## Chat
+Perfil:
+
+- `GET /api/profile`
+- `POST /api/profile` (multipart)
+- `GET /api/profile/avatar/{userId}`
+
+## Avatar (simple)
+
+Para evitar errores en Safari/Firefox y asegurar compatibilidad:
+
+- El avatar se guarda en `public/uploads/avatars/{userId}.{ext}`.
+- La API devuelve el avatar desde archivo (endpoint `/api/profile/avatar/{userId}`).
+- Si no existe archivo, se usa fallback de iniciales en la UI.
+
+Permisos requeridos en producción:
+
+```bash
+mkdir -p public/uploads/avatars
+chmod 755 public/uploads/avatars
+```
+
+Chat:
 
 - `GET /api/users`
 - `GET /api/chats`
-- `POST /api/chats`
+- `POST /api/chats` (directo)
+- `POST /api/chats/groups`
+- `PATCH /api/chats/{chatId}/group`
+- `GET /api/chats/{chatId}/members`
+- `POST /api/chats/{chatId}/members`
+- `DELETE /api/chats/{chatId}/members/{userId}`
+- `POST /api/chats/{chatId}/leave`
 - `GET /api/chats/{chatId}/messages?afterId=`
 - `POST /api/chats/{chatId}/messages`
-- `GET /api/attachments/{attachmentId}`
+- `GET /api/attachments/{attachmentId}?disposition=inline|attachment`
 
-## 9. Seguridad implementada
+## Reglas de grupos
 
-- Hash de contrasena con hasher de Symfony (argon/bcrypt segun entorno).
-- Correo no se guarda en claro:
-  - `email_ciphertext` (cifrado)
-  - `email_hash` (blind index para busqueda)
-- Cifrado simetrico de mensajes y adjuntos.
-- CSRF en operaciones mutantes.
-- Rate limiting para login y flujos publicos.
-- Cookies seguras:
-  - `HttpOnly`
-  - `Secure`
-  - `SameSite=Lax`
+- Creador del grupo = admin inicial.
+- Admin puede renombrar, agregar y quitar miembros.
+- Cualquier miembro puede salir.
+- Si no queda admin, se promueve el miembro más antiguo.
+- Límite: 50 miembros por grupo.
 
-## 10. Despliegue en Hostinger (paso a paso)
-
-## 1) Preparacion
-
-- Crear subdominio.
-- Activar SSH.
-- Crear DB MySQL y usuario.
-- Crear correo para SMTP.
-- Verificar PHP 8.4.
-
-## 2) Subir codigo
-
-En carpeta del subdominio (`public_html`):
+## Desarrollo local
 
 ```bash
-git init -b main
-git remote add origin https://github.com/ferruzxca/PlaticaNubecita.git
-git fetch --depth=1 origin main
-git reset --hard origin/main
+php -v
+php bin/console doctrine:migrations:migrate --no-interaction
+php -S 127.0.0.1:8000 -t public
 ```
 
-## 3) Instalar dependencias
+Abrir: `http://127.0.0.1:8000`
 
-En Hostinger:
+## Pruebas
+
+```bash
+php bin/phpunit
+php bin/console lint:container
+php bin/console lint:twig templates
+php bin/console lint:yaml config
+```
+
+## Despliegue Hostinger (resumen)
+
+1. Subir repositorio al subdominio (`public_html`).
+2. Instalar dependencias con PHP 8.4:
 
 ```bash
 /opt/alt/php84/usr/bin/php /usr/local/bin/composer2 install --no-dev --optimize-autoloader --no-interaction --ignore-platform-req=ext-redis
 ```
 
-## 4) Configurar `.env.local`
-
-Crear en `public_html/.env.local` con tus valores de prod.
-
-## 5) Activar PHP 8.4 a nivel web
-
-El proyecto incluye en `.htaccess`:
-
-```apache
-AddHandler application/x-httpd-alt-php84___lsphp .php .php8 .phtml
-```
-
-Esto evita que la web corra en PHP 8.3.
-
-## 6) Base de datos
-
-Primera vez (si no hay tablas):
-
-```bash
-APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console doctrine:schema:create --no-interaction
-APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console doctrine:migrations:sync-metadata-storage --no-interaction
-APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console doctrine:migrations:version "DoctrineMigrations\\Version20260227214856" --add --no-interaction
-```
-
-Siguientes despliegues:
+3. Configurar `.env.local` con variables de producción.
+4. Ejecutar migraciones:
 
 ```bash
 APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
-## 7) Cache
+5. Limpiar caché:
 
 ```bash
 APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console cache:clear --no-warmup
 ```
 
-## 8) Cron (limpieza de tokens)
+6. Confirmar cron activo para limpieza de tokens.
 
-En hPanel > Cron Jobs:
+## Checklist de aceptación v2
 
-- expresion: `*/5 * * * *`
-- comando:
+- Registro/login/reset funcionando como antes.
+- Edición de perfil (nombre/estado/avatar) operativa.
+- `Nubecita IA` visible y respondiendo en chat dedicado.
+- Grupos: crear/renombrar/agregar/quitar/salir funcionando.
+- Adjuntos cifrados con preview inline.
+- Sin mensajes/correos en texto plano en SQL.
+
+## Troubleshooting IA
+
+- `OPENAI_API_KEY` vacía o inválida:
+  - el chat responde con error controlado de IA.
+- Timeout a OpenAI:
+  - subir `AI_TIMEOUT_SECONDS`.
+- Límite de cuota/requests:
+  - revisar cuota OpenAI y rate limits de la app.
+
+## Rollback de despliegue
+
+1. Regresar al commit estable:
 
 ```bash
-/opt/alt/php84/usr/bin/php /home/u186891664/domains/chat.ferruzca.pro/public_html/bin/console app:tokens:cleanup --env=prod >> /home/u186891664/domains/chat.ferruzca.pro/public_html/var/log/cron.log 2>&1
+git fetch origin
+git reset --hard <commit_estable>
 ```
 
-## 11. Verificacion funcional recomendada
+2. Ejecutar migración de rollback solo si necesitas revertir esquema:
 
-1. Abrir `/` y confirmar pantalla de login.
-2. Solicitar link de registro.
-3. Registrar usuario nuevo.
-4. Iniciar sesion.
-5. Ver lista de cuentas.
-6. Crear chat y enviar mensaje.
-7. Subir adjunto (imagen/audio/mp4/archivo).
-8. Descargar adjunto.
-9. Probar flujo de "Olvide mi contrasena".
+```bash
+APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console doctrine:migrations:migrate prev --no-interaction
+```
 
-## 12. Troubleshooting rapido
-
-## Error `Composer dependencies require PHP >= 8.4`
-
-- La web o CLI esta en PHP 8.3.
-- Solucion:
-  - usar `/opt/alt/php84/usr/bin/php` para comandos CLI
-  - asegurar `AddHandler ... php84 ...` en `.htaccess`
-
-## Error `Token CSRF invalido`
-
-- Verificar que el formulario cargue token fresco desde la misma sesion.
-- No reutilizar cookies/token expirados.
-
-## Error `Access denied for user ...` MySQL
-
-- Revisar `DATABASE_URL` en `.env.local`.
-- Verificar usuario/password/DB exactos.
-- Si hay caracteres especiales en password, escapar correctamente.
-
-## 13. Operacion y seguridad
-
-- No versionar secretos en git.
-- Rotar periodicamente:
-  - `APP_SECRET`
-  - password DB
-  - password SMTP
-  - password SSH
-- Respaldar DB y `var/log`.
-
-## 14. Documentacion adicional
-
-- Deploy detallado: `HOSTINGER_DEPLOY.md`
-- Variables base: `.env.example`
+3. Limpiar caché y validar login/chat.

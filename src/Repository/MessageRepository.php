@@ -42,4 +42,23 @@ class MessageRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['chat' => $chat], ['id' => 'DESC']);
     }
+
+    /**
+     * @return list<Message>
+     */
+    public function findLatestByChat(Chat $chat, int $limit = 20): array
+    {
+        $messages = $this->createQueryBuilder('m')
+            ->addSelect('a', 's')
+            ->leftJoin('m.attachments', 'a')
+            ->join('m.sender', 's')
+            ->andWhere('m.chat = :chat')
+            ->setParameter('chat', $chat)
+            ->orderBy('m.id', 'DESC')
+            ->setMaxResults(max(1, $limit))
+            ->getQuery()
+            ->getResult();
+
+        return array_values(array_reverse($messages));
+    }
 }

@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Repository\ChatRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ChatRepository::class)]
@@ -22,8 +23,18 @@ class Chat
     #[ORM\Column(length: 20)]
     private string $type = 'direct';
 
-    #[ORM\Column(length: 64)]
-    private string $pairHash = '';
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $pairHash = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $owner = null;
+
+    #[ORM\Column(type: Types::BLOB, nullable: true)]
+    private mixed $nameCiphertext = null;
+
+    #[ORM\Column(type: Types::BINARY, length: 24, nullable: true)]
+    private ?string $nameNonce = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -64,14 +75,60 @@ class Chat
         return $this;
     }
 
-    public function getPairHash(): string
+    public function getPairHash(): ?string
     {
         return $this->pairHash;
     }
 
-    public function setPairHash(string $pairHash): self
+    public function setPairHash(?string $pairHash): self
     {
-        $this->pairHash = strtolower($pairHash);
+        $this->pairHash = null === $pairHash ? null : strtolower($pairHash);
+
+        return $this;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): self
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getNameCiphertext(): ?string
+    {
+        if (null === $this->nameCiphertext) {
+            return null;
+        }
+
+        if (is_resource($this->nameCiphertext)) {
+            $contents = stream_get_contents($this->nameCiphertext);
+
+            return $contents === false ? null : $contents;
+        }
+
+        return (string) $this->nameCiphertext;
+    }
+
+    public function setNameCiphertext(?string $nameCiphertext): self
+    {
+        $this->nameCiphertext = $nameCiphertext;
+
+        return $this;
+    }
+
+    public function getNameNonce(): ?string
+    {
+        return $this->nameNonce;
+    }
+
+    public function setNameNonce(?string $nameNonce): self
+    {
+        $this->nameNonce = $nameNonce;
 
         return $this;
     }

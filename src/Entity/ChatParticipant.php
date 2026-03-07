@@ -28,6 +28,9 @@ class ChatParticipant
     #[ORM\Column]
     private \DateTimeImmutable $joinedAt;
 
+    #[ORM\Column(length: 20, options: ['default' => 'member'])]
+    private string $role = 'member';
+
     public function __construct()
     {
         $this->joinedAt = new \DateTimeImmutable();
@@ -65,5 +68,23 @@ class ChatParticipant
     public function getJoinedAt(): \DateTimeImmutable
     {
         return $this->joinedAt;
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
+    }
+
+    public function setRole(string $role): self
+    {
+        $value = strtolower(trim($role));
+        $this->role = in_array($value, ['admin', 'member'], true) ? $value : 'member';
+
+        return $this;
+    }
+
+    public function isAdmin(): bool
+    {
+        return 'admin' === $this->role;
     }
 }

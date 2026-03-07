@@ -6,19 +6,35 @@
 <meta name="csrf-chat-create" content="{{ csrf_token('chat_create') }}">
 <meta name="csrf-chat-send" content="{{ csrf_token('chat_send') }}">
 <meta name="csrf-auth-logout" content="{{ csrf_token('auth_logout') }}">
+<meta name="csrf-profile-update" content="{{ csrf_token('profile_update') }}">
+<meta name="csrf-chat-group-create" content="{{ csrf_token('chat_group_create') }}">
+<meta name="csrf-chat-group-manage" content="{{ csrf_token('chat_group_manage') }}">
+<meta name="csrf-chat-leave" content="{{ csrf_token('chat_leave') }}">
 {% endblock %}
 
 {% block body %}
 <main class="chat-shell" data-current-user-id="{{ app.user.id }}" data-current-user-name="{{ app.user.displayName }}">
     <aside class="chat-sidebar">
-        <div class="chat-sidebar__header">
-            <h1>PlaticaNubecita</h1>
-            <p>{{ app.user.displayName }}</p>
-            <button id="logout-button" class="ghost-btn">Cerrar sesión</button>
-        </div>
+        <section class="profile-card">
+            <div class="profile-card__row">
+                <div id="profile-avatar" class="avatar-shell avatar-shell--lg" aria-label="Avatar">
+                    <img class="avatar-img" alt="">
+                    <span class="avatar-initials" aria-hidden="true">PN</span>
+                </div>
+                <div>
+                    <h1 id="profile-name">{{ app.user.displayName }}</h1>
+                    <p id="profile-status">Sin estado</p>
+                </div>
+            </div>
+            <div class="profile-card__actions">
+                <button id="edit-profile-button" class="ghost-btn" type="button">Editar perfil</button>
+                <button id="create-group-button" class="ghost-btn" type="button">Crear grupo</button>
+                <button id="logout-button" class="ghost-btn" type="button">Cerrar sesión</button>
+            </div>
+        </section>
 
         <section>
-            <h2>Cuentas registradas</h2>
+            <h2>Cuentas y bots</h2>
             <ul id="users-list" class="mini-list"></ul>
         </section>
 
@@ -30,8 +46,20 @@
 
     <section class="chat-main">
         <header class="chat-main__header">
-            <h2 id="chat-title">Selecciona una cuenta</h2>
-            <p id="chat-subtitle">Elige un chat para empezar a conversar.</p>
+            <div class="chat-main__identity">
+                <div id="active-chat-avatar" class="avatar-shell" aria-label="Avatar del chat">
+                    <img class="avatar-img" alt="">
+                    <span class="avatar-initials" aria-hidden="true">PN</span>
+                </div>
+                <div>
+                    <h2 id="chat-title">Selecciona una conversación</h2>
+                    <p id="chat-subtitle">Mensajes cifrados y sincronización cada 2.5 segundos.</p>
+                </div>
+            </div>
+            <div class="chat-main__actions">
+                <button id="manage-group-button" class="ghost-btn is-hidden" type="button">Gestionar grupo</button>
+                <button id="leave-group-button" class="ghost-btn is-hidden" type="button">Salir del grupo</button>
+            </div>
         </header>
 
         <div id="messages-panel" class="messages-panel"></div>
@@ -43,7 +71,7 @@
                 <textarea name="text" rows="3" placeholder="Escribe tu mensaje..."></textarea>
             </label>
             <label>
-                Adjuntos (imágenes, audio, video mp4 y archivos)
+                Adjuntos (imagenes, audio, video, archivos)
                 <input type="file" name="files[]" multiple>
             </label>
             <button type="submit">Enviar</button>
@@ -51,8 +79,97 @@
         </form>
     </section>
 </main>
+
+<div id="profile-modal" class="modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+    <div class="modal__card">
+        <h3 id="profile-modal-title">Editar perfil</h3>
+        <form id="profile-form" class="stack-form" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('profile_update') }}">
+            <label>Nombre visible
+                <input type="text" name="displayName" id="profile-input-name" minlength="3" maxlength="80" required>
+            </label>
+            <label>Estado
+                <input type="text" name="statusText" id="profile-input-status" maxlength="140" placeholder="Disponible para chatear">
+            </label>
+            <label>Subir foto desde galería
+                <input id="profile-avatar-upload-input" type="file" name="avatar" accept="image/*">
+            </label>
+            <label>Tomar foto con cámara (opcional)
+                <input id="profile-avatar-camera-input" type="file" accept="image/*" capture="user">
+            </label>
+            <div class="profile-preview">
+                <div id="profile-upload-preview" class="avatar-shell avatar-shell--xl" aria-label="Vista previa de avatar">
+                    <img class="avatar-img" alt="">
+                    <span class="avatar-initials" aria-hidden="true">PN</span>
+                </div>
+                <p class="muted">Vista previa del avatar final. Puedes usar foto tomada o una imagen ya guardada.</p>
+            </div>
+            <label class="check-inline">
+                <input type="checkbox" name="removeAvatar" value="1">
+                Quitar foto actual
+            </label>
+            <div class="modal__actions">
+                <button type="submit">Guardar cambios</button>
+                <button type="button" data-close-modal="profile-modal" class="ghost-btn">Cancelar</button>
+            </div>
+            <p id="profile-feedback" class="feedback"></p>
+        </form>
+    </div>
+</div>
+
+<div id="group-create-modal" class="modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="group-create-title">
+    <div class="modal__card">
+        <h3 id="group-create-title">Crear grupo</h3>
+        <form id="group-create-form" class="stack-form">
+            <label>Nombre del grupo
+                <input type="text" name="name" minlength="3" maxlength="80" required>
+            </label>
+            <p class="muted">Selecciona miembros (máximo 50 contando tu usuario).</p>
+            <div id="group-members-candidates" class="select-list"></div>
+            <div class="modal__actions">
+                <button type="submit">Crear</button>
+                <button type="button" data-close-modal="group-create-modal" class="ghost-btn">Cancelar</button>
+            </div>
+            <p id="group-create-feedback" class="feedback"></p>
+        </form>
+    </div>
+</div>
+
+<div id="group-manage-modal" class="modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="group-manage-title">
+    <div class="modal__card">
+        <h3 id="group-manage-title">Gestionar grupo</h3>
+
+        <form id="group-rename-form" class="stack-form">
+            <label>Renombrar grupo
+                <input type="text" name="name" id="group-rename-input" minlength="3" maxlength="80" required>
+            </label>
+            <button type="submit">Actualizar nombre</button>
+        </form>
+
+        <hr class="separator">
+
+        <form id="group-add-members-form" class="stack-form">
+            <p class="muted">Agregar miembros</p>
+            <div id="group-add-candidates" class="select-list"></div>
+            <button type="submit">Agregar seleccionados</button>
+        </form>
+
+        <hr class="separator">
+
+        <section>
+            <p class="muted">Miembros actuales</p>
+            <ul id="group-members-list" class="mini-list"></ul>
+        </section>
+
+        <div class="modal__actions">
+            <button type="button" data-close-modal="group-manage-modal" class="ghost-btn">Cerrar</button>
+        </div>
+
+        <p id="group-manage-feedback" class="feedback"></p>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ asset('js/chat.js') }}" defer></script>
+<script src="{{ asset('js/chat.js') }}?v=20260306c" defer></script>
 {% endblock %}

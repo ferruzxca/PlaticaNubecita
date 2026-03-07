@@ -32,6 +32,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 64)]
     private string $emailHash = '';
 
+    #[ORM\Column(type: Types::BLOB, nullable: true)]
+    private mixed $statusCiphertext = null;
+
+    #[ORM\Column(type: Types::BLOB, nullable: true)]
+    private mixed $avatarBlob = null;
+
+    #[ORM\Column(type: Types::BINARY, length: 24, nullable: true)]
+    private ?string $avatarNonce = null;
+
+    #[ORM\Column(options: ['default' => 1])]
+    private int $avatarKeyVersion = 1;
+
+    #[ORM\Column(type: Types::BLOB, nullable: true)]
+    private mixed $avatarMimeCiphertext = null;
+
     /**
      * @var list<string>
      */
@@ -43,6 +58,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(options: ['default' => true])]
     private bool $isActive = true;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isBot = false;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -130,6 +148,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getStatusCiphertext(): ?string
+    {
+        return $this->readNullableLob($this->statusCiphertext);
+    }
+
+    public function setStatusCiphertext(?string $statusCiphertext): self
+    {
+        $this->statusCiphertext = $statusCiphertext;
+
+        return $this;
+    }
+
+    public function getAvatarBlob(): ?string
+    {
+        return $this->readNullableLob($this->avatarBlob);
+    }
+
+    public function setAvatarBlob(?string $avatarBlob): self
+    {
+        $this->avatarBlob = $avatarBlob;
+
+        return $this;
+    }
+
+    public function getAvatarNonce(): ?string
+    {
+        return $this->avatarNonce;
+    }
+
+    public function setAvatarNonce(?string $avatarNonce): self
+    {
+        $this->avatarNonce = $avatarNonce;
+
+        return $this;
+    }
+
+    public function getAvatarKeyVersion(): int
+    {
+        return $this->avatarKeyVersion;
+    }
+
+    public function setAvatarKeyVersion(int $avatarKeyVersion): self
+    {
+        $this->avatarKeyVersion = max(1, $avatarKeyVersion);
+
+        return $this;
+    }
+
+    public function getAvatarMimeCiphertext(): ?string
+    {
+        return $this->readNullableLob($this->avatarMimeCiphertext);
+    }
+
+    public function setAvatarMimeCiphertext(?string $avatarMimeCiphertext): self
+    {
+        $this->avatarMimeCiphertext = $avatarMimeCiphertext;
+
+        return $this;
+    }
+
     /**
      * @return list<string>
      */
@@ -184,6 +262,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function isBot(): bool
+    {
+        return $this->isBot;
+    }
+
+    public function setIsBot(bool $isBot): self
+    {
+        $this->isBot = $isBot;
+
+        return $this;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
@@ -192,6 +282,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function hasAvatar(): bool
+    {
+        $blob = $this->getAvatarBlob();
+        $nonce = $this->avatarNonce;
+        $mime = $this->getAvatarMimeCiphertext();
+        if (null === $blob || null === $nonce || null === $mime) {
+            return false;
+        }
+
+        return '' !== $blob && '' !== $nonce && '' !== $mime;
     }
 
     private function readLob(mixed $value): string
@@ -203,5 +305,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return (string) $value;
+    }
+
+    private function readNullableLob(mixed $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        return $this->readLob($value);
     }
 }
