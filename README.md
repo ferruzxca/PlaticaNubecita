@@ -16,6 +16,10 @@ Aplicación de chat cifrado con Symfony 7.4 lista para Hostinger.
   - renombrar,
   - agregar/quitar miembros,
   - salir de grupo.
+- PWA Android instalable:
+  - boton "Instalar app",
+  - manifest + service worker conservador,
+  - layout movil ajustado para uso tactil.
 - Adjuntos cifrados en base de datos con vista mejorada:
   - preview inline para imagen/audio/video,
   - tarjeta de descarga para archivos generales.
@@ -147,6 +151,22 @@ php -S 127.0.0.1:8000 -t public
 
 Abrir: `http://127.0.0.1:8000`
 
+## PWA Android
+
+- Recursos publicos:
+  - `/manifest.webmanifest`
+  - `/sw.js`
+  - `/icons/*`
+- Instalacion:
+  - en Chrome Android, usar el boton `Instalar app` cuando aparezca,
+  - si el navegador no muestra prompt, abrir menu del navegador y tocar `Instalar app`.
+- Alcance v1:
+  - instalable en Android,
+  - modo standalone,
+  - cache de shell estatico,
+  - sin push notifications,
+  - sin offline real de mensajes/API.
+
 ## Pruebas
 
 ```bash
@@ -193,7 +213,8 @@ APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console doctrine:migrations:migrate 
 APP_ENV=prod /opt/alt/php84/usr/bin/php bin/console cache:clear --no-warmup
 ```
 
-7. Confirmar cron activo para limpieza de tokens.
+7. Confirmar que `public/.htaccess`, `manifest.webmanifest`, `sw.js` e iconos esten presentes en produccion.
+8. Confirmar cron activo para limpieza de tokens.
 
 ## Archivo SQL
 

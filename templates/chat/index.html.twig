@@ -14,7 +14,14 @@
 
 {% block body %}
 <main class="chat-shell" data-current-user-id="{{ app.user.id }}" data-current-user-name="{{ app.user.displayName }}">
+    <button id="chat-sidebar-backdrop" class="chat-sidebar-backdrop is-hidden" type="button" aria-label="Cerrar panel"></button>
+
     <aside class="chat-sidebar">
+        <div class="chat-sidebar__mobile-bar">
+            <p class="chat-sidebar__mobile-label">Conversaciones</p>
+            <button id="mobile-sidebar-close" class="ghost-btn mobile-sidebar-close" type="button">Cerrar</button>
+        </div>
+
         <section class="profile-card">
             <div class="profile-card__row">
                 <div id="profile-avatar" class="avatar-shell avatar-shell--lg" aria-label="Avatar">
@@ -31,6 +38,12 @@
                 <button id="create-group-button" class="ghost-btn" type="button">Crear grupo</button>
                 <button id="logout-button" class="ghost-btn" type="button">Cerrar sesión</button>
             </div>
+            <div class="install-panel install-panel--compact is-hidden" data-pwa-install-root>
+                <p class="install-panel__eyebrow">Android</p>
+                <button class="install-panel__button install-panel__button--small is-hidden" data-pwa-install-button type="button">Instalar app</button>
+                <p class="install-panel__hint is-hidden" data-pwa-install-manual>Abre el menu del navegador y toca "Instalar app".</p>
+                <p class="install-panel__status is-hidden" data-pwa-install-status>App instalada en este dispositivo.</p>
+            </div>
         </section>
 
         <section>
@@ -46,6 +59,10 @@
 
     <section class="chat-main">
         <header class="chat-main__header">
+            <div class="chat-main__mobile-bar">
+                <button id="mobile-sidebar-open" class="ghost-btn mobile-nav-btn" type="button">Chats</button>
+                <span class="chat-main__mobile-pill">Movil</span>
+            </div>
             <div class="chat-main__identity">
                 <div id="active-chat-avatar" class="avatar-shell" aria-label="Avatar del chat">
                     <img class="avatar-img" alt="">
@@ -171,5 +188,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ asset('js/chat.js') }}?v=20260306c" defer></script>
+<script src="{{ asset('js/chat.js') }}?v=20260309pwa2" defer></script>
 {% endblock %}

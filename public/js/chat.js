@@ -10,6 +10,9 @@ if (shell) {
   const formEl = document.getElementById('send-message-form');
   const feedbackEl = document.getElementById('message-feedback');
   const logoutButtonEl = document.getElementById('logout-button');
+  const sidebarBackdropEl = document.getElementById('chat-sidebar-backdrop');
+  const sidebarOpenBtn = document.getElementById('mobile-sidebar-open');
+  const sidebarCloseBtn = document.getElementById('mobile-sidebar-close');
 
   const profileNameEl = document.getElementById('profile-name');
   const profileStatusEl = document.getElementById('profile-status');
@@ -62,6 +65,7 @@ if (shell) {
   let selectedAvatarFile = null;
   let avatarProcessing = null;
   let sendingMessage = false;
+  const mobileSidebarQuery = window.matchMedia('(max-width: 980px)');
 
   const escapeHtml = (value) =>
     String(value || '')
@@ -202,6 +206,28 @@ if (shell) {
     el.classList.remove('ok', 'error');
     if (mode) {
       el.classList.add(mode);
+    }
+  };
+
+  const isMobileViewport = () => mobileSidebarQuery.matches;
+
+  const closeSidebar = () => {
+    shell.classList.remove('chat-shell--sidebar-open');
+    sidebarBackdropEl?.classList.add('is-hidden');
+  };
+
+  const openSidebar = () => {
+    if (!isMobileViewport()) {
+      return;
+    }
+
+    sidebarBackdropEl?.classList.remove('is-hidden');
+    shell.classList.add('chat-shell--sidebar-open');
+  };
+
+  const syncSidebarState = () => {
+    if (!isMobileViewport()) {
+      closeSidebar();
     }
   };
 
@@ -440,6 +466,7 @@ if (shell) {
     currentChat = chats.find((chat) => Number(chat.chatId) === currentChatId) || null;
     renderChats();
     applyChatHeader();
+    closeSidebar();
     await loadMessages(currentChatId, 0, true);
 
     if (pollTimer) {
@@ -622,6 +649,7 @@ if (shell) {
       removeAvatarCheckbox.checked = false;
     }
     setFeedback(profileFeedbackEl, '');
+    closeSidebar();
     openModal(profileModal);
   });
 
@@ -756,6 +784,7 @@ if (shell) {
     groupCreateForm.reset();
     setFeedback(groupCreateFeedbackEl, '');
     renderGroupCandidateCheckboxes();
+    closeSidebar();
     openModal(groupCreateModal);
   });
 
@@ -789,6 +818,7 @@ if (shell) {
     setFeedback(groupManageFeedbackEl, '');
     try {
       await refreshManageModal();
+      closeSidebar();
       openModal(groupManageModal);
     } catch (error) {
       setFeedback(feedbackEl, error.message, 'error');
@@ -882,8 +912,19 @@ if (shell) {
     });
   });
 
+  sidebarOpenBtn?.addEventListener('click', openSidebar);
+  sidebarCloseBtn?.addEventListener('click', closeSidebar);
+  sidebarBackdropEl?.addEventListener('click', closeSidebar);
+  window.addEventListener('resize', syncSidebarState);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeSidebar();
+    }
+  });
+
   (async () => {
     try {
+      syncSidebarState();
       await Promise.all([loadProfile(), loadUsers(), loadChats()]);
       if (chats.length > 0) {
         await openChat(chats[0].chatId);

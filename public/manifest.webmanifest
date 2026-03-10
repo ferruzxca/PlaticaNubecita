@@ -1,0 +1,38 @@
+{
+  "id": "/chat",
+  "name": "PlaticaNubecita",
+  "short_name": "Nubecita",
+  "description": "Chat cifrado con usuarios, grupos y Nubecita IA, instalable en Android.",
+  "lang": "es-MX",
+  "start_url": "/chat",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#120d23",
+  "theme_color": "#6d28d9",
+  "categories": [
+    "social",
+    "communication",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

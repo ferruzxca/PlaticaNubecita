@@ -13,6 +13,14 @@
             <li>Recuperación de contraseña</li>
             <li>Mensajes y adjuntos cifrados en base de datos</li>
         </ul>
+        <section class="install-panel is-hidden" data-pwa-install-root>
+            <p class="install-panel__eyebrow">Android</p>
+            <h2>Llevalo como app</h2>
+            <p class="install-panel__copy">Instala PlaticaNubecita en tu telefono y abre el chat con formato de aplicacion.</p>
+            <button class="install-panel__button is-hidden" data-pwa-install-button type="button">Instalar app Android</button>
+            <p class="install-panel__hint is-hidden" data-pwa-install-manual>En Android Chrome abre el menu del navegador y toca "Instalar app".</p>
+            <p class="install-panel__status is-hidden" data-pwa-install-status>La app ya esta instalada en este dispositivo.</p>
+        </section>
     </section>
 
     <section class="auth-cards">
@@ -59,5 +67,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ asset('js/auth.js') }}" defer></script>
+<script src="{{ asset('js/auth.js') }}?v=20260309pwa2" defer></script>
 {% endblock %}
